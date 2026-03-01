@@ -1,22 +1,10 @@
-const crypto     = require('crypto');
-const nodemailer = require('nodemailer');
-const User       = require('../models/User');
-const jwt        = require('jsonwebtoken');
+const crypto    = require('crypto');
+const { Resend } = require('resend');
+const User      = require('../models/User');
+const jwt       = require('jsonwebtoken');
 
-/* ── Nodemailer transporter ── */
-const transporter = nodemailer.createTransport({
-  host:   'smtp.gmail.com',
-  port:   587,       // 465 (SSL) is often blocked on Render; 587 (STARTTLS) is not
-  secure: false,     // STARTTLS — upgraded automatically after the initial handshake
-  family: 4,         // Force IPv4 socket; belt-and-suspenders with dns.setDefaultResultOrder
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false,
-  },
-});
+/* ── Resend email client ── */
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 
 /* ── Token factory ── */
@@ -44,11 +32,10 @@ const sendVerificationEmail = async (toEmail, toName, token) => {
   const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
   const verifyLink   = `${FRONTEND_URL}/verify?token=${token}`;
 
-  await transporter.sendMail({
-    from:    `"Stockenza" <${process.env.EMAIL_USER}>`,
+  await resend.emails.send({
+    from:    'Stockenza <onboarding@resend.dev>',
     to:      toEmail,
     subject: 'Verify your Stockenza account',
-    text:    `Hi ${toName},\n\nPlease verify your email by clicking the link below:\n${verifyLink}\n\nThis link is valid for 7 days. If you didn't create this account, you can safely ignore this email.\n\n— The Stockenza Team`,
     html: `
       <div style="font-family:sans-serif;max-width:520px;margin:0 auto;background:#09090e;color:#e4e4e7;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,0.07)">
         <!-- Header -->
@@ -222,11 +209,10 @@ const forgotPassword = async (req, res) => {
     const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
     const resetLink    = `${FRONTEND_URL}/reset-password?token=${resetPasswordToken}`;
 
-    await transporter.sendMail({
-      from:    `"Stockenza" <${process.env.EMAIL_USER}>`,
+    await resend.emails.send({
+      from:    'Stockenza <onboarding@resend.dev>',
       to:      user.email,
       subject: 'Reset your Stockenza password',
-      text:    `Hi ${user.name},\n\nWe received a request to reset your password. Click the link below (valid for 1 hour):\n${resetLink}\n\nIf you didn't request this, you can safely ignore this email.\n\n— The Stockenza Team`,
       html: `
         <div style="font-family:sans-serif;max-width:520px;margin:0 auto;background:#09090e;color:#e4e4e7;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,0.07)">
           <div style="background:linear-gradient(135deg,#4338ca,#6d28d9);padding:32px 40px;text-align:center">
