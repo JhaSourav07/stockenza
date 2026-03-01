@@ -12,6 +12,7 @@ import CurrencyPreference from '../../app/profile/CurrencyPreference';
 import ActiveSession from '../../app/profile/ActiveSession';
 import DangerZone from '../../app/profile/DangerZone';
 import PlaceholderSection from '../../app/profile/PlaceholderSection';
+import BillingSection from '../../app/profile/BillingSection';
 
 const SECTIONS = [
   { label: 'Account',       icon: '👤' },
@@ -141,6 +142,8 @@ export default function ProfilePage() {
             </>
           ) : activeSection === 'Security' ? (
             <DangerZone onLogout={handleLogout} onResetData={handleResetData} />
+          ) : activeSection === 'Billing' ? (
+            <BillingSection />
           ) : (
             <PlaceholderSection activeSection={activeSection} sections={SECTIONS} />
           )}

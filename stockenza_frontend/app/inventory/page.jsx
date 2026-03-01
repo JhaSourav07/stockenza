@@ -74,7 +74,7 @@ export default function InventoryPage() {
 
     // 3. Low stock filter
     if (showLowStock) {
-      result = result.filter((item) => item.quantity < 10);
+      result = result.filter((item) => item.quantity < 5);
     }
 
     // 4. Sort

@@ -70,7 +70,7 @@ export default function InventorySearch({
         </span>
         {showLowStock && (
           <span className="ml-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/20">
-            &lt; 10
+            &lt; 5
           </span>
         )}
       </label>

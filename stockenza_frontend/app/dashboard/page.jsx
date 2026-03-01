@@ -9,7 +9,6 @@ import MetricCard from '../../components/ui/MetricCard';
 import RevenueProfitChart from '../../app/dashboard/RevenueProfitChart';
 import PnLTable from '../../app/dashboard/PnLTable';
 
-// ── Date range pill options ────────────────────────────────────────────────────
 const DATE_RANGES = [
   { label: 'Today',    value: 'today'    },
   { label: '7 Days',   value: '7days'    },
@@ -18,77 +17,58 @@ const DATE_RANGES = [
   { label: 'All Time', value: 'all-time' },
 ];
 
-/**
- * Converts a date-range key into { startDate, endDate } ISO strings.
- * "Today" spans from 00:00:00.000 → 23:59:59.999 of the current day.
- * "All Time" returns nulls so the backend omits the createdAt filter entirely.
- */
 function getDateRange(range) {
   if (range === 'all-time') return { startDate: null, endDate: null };
-
-  const end   = new Date();
-  const start = new Date();
-
+  const end = new Date(), start = new Date();
   if (range === 'today') {
     start.setHours(0, 0, 0, 0);
     end.setHours(23, 59, 59, 999);
-  } else if (range === '7days') {
-    start.setDate(start.getDate() - 7);
-  } else if (range === '30days') {
-    start.setDate(start.getDate() - 30);
-  } else if (range === '1year') {
-    start.setFullYear(start.getFullYear() - 1);
-  }
-
+  } else if (range === '7days')  { start.setDate(start.getDate() - 7); }
+  else if (range === '30days') { start.setDate(start.getDate() - 30); }
+  else if (range === '1year')  { start.setFullYear(start.getFullYear() - 1); }
   return { startDate: start.toISOString(), endDate: end.toISOString() };
 }
 
-/** Build a query-string from a { startDate, endDate } object. Returns '' for all-time. */
 function buildQs({ startDate, endDate }) {
   if (!startDate || !endDate) return '';
   return `?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`;
 }
 
 /**
- * Transform raw daily chart data into the correct granularity.
- *
- * Problem: The backend always returns daily rows (one per YYYY-MM-DD).
- * For short ranges (today / 7 days) we want day-level labels.
- * For longer ranges (30 days / 1 year / all-time) we want MONTHLY labels —
- * which means we must AGGREGATE the daily rows into monthly buckets first.
- * Simply relabelling each daily row with a month name creates duplicate
- * X-axis ticks and double-counts values in Recharts.
+ * "14:00" → "2 PM"  |  "00:00" → "12 AM"  |  "12:00" → "12 PM"
  */
-function transformChartData(rawData, dateRange) {
-  const useDayLabel = dateRange === 'today' || dateRange === '7days';
+function formatHourLabel(hourKey) {
+  const h = parseInt(hourKey, 10);
+  if (h === 0)  return '12 AM';
+  if (h === 12) return '12 PM';
+  return h < 12 ? `${h} AM` : `${h - 12} PM`;
+}
 
-  if (useDayLabel) {
-    // Day-level — one point per row, label as "Mar 1"
+/**
+ * Converts backend { granularity, data } into Recharts-ready rows.
+ *
+ * granularity = 'hour' → label each point as "2 PM", "3 PM" etc.
+ * granularity = 'day'  → 7-day range: "Mar 1"; longer: aggregate to monthly buckets
+ */
+function transformChartData(granularity, rawData, dateRange) {
+  if (granularity === 'hour') {
+    return rawData.map((d) => ({ ...d, month: formatHourLabel(d.date) }));
+  }
+
+  if (dateRange === '7days') {
     return rawData.map((d) => {
-      const dt    = new Date(d.date);
-      const label = dt.toLocaleString('en-US', { month: 'short', day: 'numeric' });
-      return { ...d, month: label };
+      const dt = new Date(d.date + 'T00:00:00');
+      return { ...d, month: dt.toLocaleString('en-US', { month: 'short', day: 'numeric' }) };
     });
   }
 
-  // Month-level — aggregate daily rows into monthly buckets
-  const buckets = {}; // key: "Mar '26" → { month, revenue, profit }
-
+  // Monthly aggregation for 30days / 1year / all-time
+  const buckets = {};
   rawData.forEach((d) => {
-    // Parse date as UTC to avoid timezone-induced day-shift
-    const dt    = new Date(d.date + 'T00:00:00Z');
-    const key   = dt.toLocaleString('en-US', {
-      month:    'short',
-      year:     '2-digit',
-      timeZone: 'UTC',
-    });
-
-    if (!buckets[key]) {
-      // Preserve insertion order by noting the sort key (year-month number)
-      const sortKey = dt.getUTCFullYear() * 100 + dt.getUTCMonth();
-      buckets[key]  = { month: key, revenue: 0, profit: 0, _sortKey: sortKey };
-    }
-
+    const dt      = new Date(d.date + 'T00:00:00Z');
+    const key     = dt.toLocaleString('en-US', { month: 'short', year: '2-digit', timeZone: 'UTC' });
+    const sortKey = dt.getUTCFullYear() * 100 + dt.getUTCMonth();
+    if (!buckets[key]) buckets[key] = { month: key, revenue: 0, profit: 0, _sortKey: sortKey };
     buckets[key].revenue += d.revenue;
     buckets[key].profit  += d.profit;
   });
@@ -104,39 +84,34 @@ function transformChartData(rawData, dateRange) {
 
 export default function DashboardPage() {
   const { fmt, isMounted } = useCurrency();
-
-  // ── Date range state ──────────────────────────────────────────────────────────
   const [dateRange, setDateRange] = useState('30days');
 
-  // ── Data state ────────────────────────────────────────────────────────────────
   const [inventory, setInventory] = useState([]);
   const [summary,   setSummary]   = useState(null);
   const [chartData, setChartData] = useState([]);
   const [pnlRows,   setPnlRows]   = useState([]);
   const [loaded,    setLoaded]    = useState(false);
 
-  // ── Fetch everything; re-runs whenever dateRange changes ──────────────────────
   const fetchAll = useCallback(async () => {
     setLoaded(false);
     try {
       const dates = getDateRange(dateRange);
       const qs    = buildQs(dates);
 
-      // All four requests fire in parallel
       const [invRes, summaryRes, chartRes, pnlRes] = await Promise.all([
-        api.get('/inventory'),                  // stock value + alerts (always all-time)
-        api.get(`/reports/summary${qs}`),       // KPI cards
-        api.get(`/reports/chart${qs}`),         // chart
-        api.get(`/reports/pnl${qs}`),           // P&L table — server-side date filter
+        api.get('/inventory'),
+        api.get(`/reports/summary${qs}`),
+        api.get(`/reports/chart${qs}`),
+        api.get(`/reports/pnl${qs}`),
       ]);
 
       setInventory(invRes.data);
       setSummary(summaryRes.data);
       setPnlRows(pnlRes.data);
 
-      // ── Transform chart data with correct aggregation ──
-      const mappedChart = transformChartData(chartRes.data, dateRange);
-      setChartData(mappedChart);
+      // Backend now returns { granularity: 'hour'|'day', data: [...] }
+      const { granularity, data: rawChart } = chartRes.data;
+      setChartData(transformChartData(granularity, rawChart, dateRange));
 
     } catch (e) { console.error(e); }
     finally     { setLoaded(true); }
@@ -144,31 +119,26 @@ export default function DashboardPage() {
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
-  // ── Derived display values ────────────────────────────────────────────────────
-  const totalRevenue = summary?.totalRevenue  ?? 0;
-  const totalProfit  = summary?.totalProfit   ?? 0;
+  const totalRevenue = summary?.totalRevenue   ?? 0;
+  const totalProfit  = summary?.totalProfit    ?? 0;
   const stockValue   = summary?.inventoryValue ?? 0;
-  const orderCount   = summary?.orderCount    ?? 0;
+  const orderCount   = summary?.orderCount     ?? 0;
   const totalCost    = pnlRows.reduce((s, r) => s + r.cost, 0);
 
-  // Alerts are always all-time — operational stock level, not a time-series metric
   const lowStockItems = inventory.filter((i) => i.quantity > 0 && i.quantity <= 5);
   const outOfStock    = inventory.filter((i) => i.quantity === 0);
 
-  // Animated count-up for the three monetary KPI cards
   const animRevenue = useCountUp(totalRevenue, 1200, loaded);
   const animProfit  = useCountUp(totalProfit,  1200, loaded);
   const animStock   = useCountUp(stockValue,   1200, loaded);
 
-  // ── Chart subtitle — reflects current granularity ────────────────────────────
   const chartSubtitle =
-    dateRange === 'today' || dateRange === '7days'
-      ? 'Daily performance breakdown'
-      : 'Monthly performance breakdown';
+    dateRange === 'today'  ? 'Hourly performance breakdown'  :
+    dateRange === '7days'  ? 'Daily performance breakdown'   :
+                             'Monthly performance breakdown';
 
   return (
     <AppLayout>
-      {/* ── Header ── */}
       <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-zinc-100 tracking-tight">Dashboard</h1>
@@ -176,7 +146,6 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex items-center gap-3 flex-wrap">
-          {/* ── Date Range Pill Selector ── */}
           <div className="flex items-center gap-1 p-1 rounded-lg bg-zinc-900 border border-zinc-800">
             {DATE_RANGES.map(({ label, value }) => (
               <button
@@ -193,7 +162,6 @@ export default function DashboardPage() {
             ))}
           </div>
 
-          {/* Currency badge */}
           {isMounted && (
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-zinc-500">
               <span>Currency</span>
@@ -205,7 +173,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ── KPI cards ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <MetricCard
           label="Total revenue"
@@ -249,7 +216,9 @@ export default function DashboardPage() {
         loaded={loaded}
         chartData={chartData}
         fmt={fmt}
+        isMounted={isMounted}
         subtitle={chartSubtitle}
+        dateRange={dateRange}
       />
 
       <PnLTable
