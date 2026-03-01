@@ -5,6 +5,9 @@ const jwt       = require('jsonwebtoken');
 
 /* ── Resend email client ── */
 const resend = new Resend(process.env.RESEND_API_KEY);
+if (!process.env.RESEND_API_KEY) {
+  console.warn('[authController] WARNING: RESEND_API_KEY is not set — emails will fail.');
+}
 
 
 /* ── Token factory ── */
@@ -32,8 +35,8 @@ const sendVerificationEmail = async (toEmail, toName, token) => {
   const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
   const verifyLink   = `${FRONTEND_URL}/verify?token=${token}`;
 
-  await resend.emails.send({
-    from:    'Stockenza <onboarding@resend.dev>',
+  const { error } = await resend.emails.send({
+    from:    'Stockenza <noreply@stockenza.co.in>',
     to:      toEmail,
     subject: 'Verify your Stockenza account',
     html: `
@@ -78,6 +81,10 @@ const sendVerificationEmail = async (toEmail, toName, token) => {
       </div>
     `,
   });
+
+  if (error) {
+    throw new Error(`Resend error (verification): ${error.message}`);
+  }
 };
 
 /**
@@ -209,7 +216,7 @@ const forgotPassword = async (req, res) => {
     const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
     const resetLink    = `${FRONTEND_URL}/reset-password?token=${resetPasswordToken}`;
 
-    await resend.emails.send({
+    const { error } = await resend.emails.send({
       from:    'Stockenza <onboarding@resend.dev>',
       to:      user.email,
       subject: 'Reset your Stockenza password',
@@ -246,6 +253,10 @@ const forgotPassword = async (req, res) => {
         </div>
       `,
     });
+
+    if (error) {
+      throw new Error(`Resend error (password reset): ${error.message}`);
+    }
 
     return res.status(200).json({
       message: 'If that email is registered, a password reset link has been sent.',
