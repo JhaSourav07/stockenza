@@ -5,16 +5,17 @@ const jwt        = require('jsonwebtoken');
 
 /* ── Nodemailer transporter ── */
 const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
+  host:   'smtp.gmail.com',
+  port:   587,       // 465 (SSL) is often blocked on Render; 587 (STARTTLS) is not
+  secure: false,     // STARTTLS — upgraded automatically after the initial handshake
+  family: 4,         // Force IPv4 socket; belt-and-suspenders with dns.setDefaultResultOrder
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
   tls: {
-    rejectUnauthorized: false
-  }
+    rejectUnauthorized: false,
+  },
 });
 
 

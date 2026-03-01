@@ -1,4 +1,9 @@
 require('dotenv').config();
+
+// ── Force IPv4 DNS resolution (fixes ENETUNREACH on Render / IPv6-only networks) ──
+const dns = require('dns');
+dns.setDefaultResultOrder('ipv4first');
+
 const express   = require('express');
 const cors      = require('cors');
 const connectDB = require('./config/db.js');
