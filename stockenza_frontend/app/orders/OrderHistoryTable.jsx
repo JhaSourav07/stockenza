@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, Fragment } from 'react';
 import Badge from '../../components/ui/Badge';
 import { useCurrency } from '../../context/CurrencyContext';
 
@@ -157,9 +157,8 @@ export default function OrderHistoryTable({ orders, loaded, totalRevenue, succes
                   .join(', ') + (order.items.length > 2 ? ` +${order.items.length - 2} more` : '');
 
                 return (
-                  <>
+                  <Fragment key={order._id}>
                     <tr
-                      key={order._id}
                       onClick={() => toggle(order._id)}
                       className={`transition-all cursor-pointer ${
                         isExpanded
@@ -224,9 +223,9 @@ export default function OrderHistoryTable({ orders, loaded, totalRevenue, succes
 
                     {/* Expanded detail row */}
                     {isExpanded && (
-                      <ExpandedDetails key={`${order._id}-expanded`} order={order} fmt={fmt} />
+                      <ExpandedDetails key={`${order._id}-exp`} order={order} fmt={fmt} />
                     )}
-                  </>
+                  </Fragment>
                 );
               })
             )}

@@ -157,7 +157,7 @@ export default function Hero() {
               <span className="w-3 h-3 rounded-full bg-emerald-500/70" />
               <div className="ml-4 flex-1 max-w-xs mx-auto">
                 <div className="bg-zinc-800 rounded-md px-3 py-1 text-xs text-zinc-500 text-center">
-                  app.stockenza.io/dashboard
+                  www.stockenza.co.in/dashboard
                 </div>
               </div>
             </div>
