@@ -3,36 +3,30 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
+import { SidebarProvider, useSidebar } from '../../context/SidebarContext';
 
-export default function AppLayout({ children }) {
+// Inner layout that reads the SidebarContext
+function AppLayoutInner({ children }) {
   const router   = useRouter();
   const pathname = usePathname();
+  const { collapsed } = useSidebar();
 
-  const [authorized,   setAuthorized]   = useState(false);
-  const [sidebarOpen,  setSidebarOpen]  = useState(false);
+  const [authorized,  setAuthorized]  = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // ── Auth guard ──
   useEffect(() => {
     const token = localStorage.getItem('stockenza_token');
-    if (!token) {
-      router.replace('/login');
-    } else {
-      setAuthorized(true);
-    }
+    if (!token) router.replace('/login');
+    else        setAuthorized(true);
   }, [router]);
 
-  // Close the mobile drawer whenever the route changes
-  useEffect(() => {
-    setSidebarOpen(false);
-  }, [pathname]);
+  // Close mobile drawer on route change
+  useEffect(() => { setSidebarOpen(false); }, [pathname]);
 
   // Prevent body scroll while mobile drawer is open
   useEffect(() => {
-    if (sidebarOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
+    document.body.style.overflow = sidebarOpen ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
   }, [sidebarOpen]);
 
@@ -54,15 +48,21 @@ export default function AppLayout({ children }) {
 
       {/*
         ── Main content ──
-        Desktop: offset by sidebar width (lg:ml-64)
-        Mobile:  full width, no offset
+        On desktop (lg+): margin-left transitions between 16rem (expanded)
+        and 4rem (collapsed) with a smooth 300ms animation.
+        On mobile: no left margin — sidebar is a floating overlay drawer.
       */}
       <main
-        className="lg:ml-64 pt-16 min-h-screen"
+        className="pt-16 min-h-screen"
         style={{ animation: 'pageIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}
       >
-        <div className="p-4 sm:p-6 lg:p-8">
-          {children}
+        <div
+          style={{ marginLeft: collapsed ? '4rem' : '16rem' }}
+          className="transition-[margin-left] duration-300 ease-in-out max-lg:!ml-0"
+        >
+          <div className="p-4 sm:p-6 lg:p-8">
+            {children}
+          </div>
         </div>
       </main>
 
@@ -73,5 +73,13 @@ export default function AppLayout({ children }) {
         }
       `}</style>
     </div>
+  );
+}
+
+export default function AppLayout({ children }) {
+  return (
+    <SidebarProvider>
+      <AppLayoutInner>{children}</AppLayoutInner>
+    </SidebarProvider>
   );
 }

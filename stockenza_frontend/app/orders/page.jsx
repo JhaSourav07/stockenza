@@ -6,20 +6,23 @@ import OrderStats from '../../app/orders/OrderStats';
 import OrderHistoryTable from '../../app/orders/OrderHistoryTable';
 
 export default function OrdersPage() {
-  const [inventory, setInventory] = useState([]);
-  const [orders,    setOrders]    = useState([]);
-  const [loaded,    setLoaded]    = useState(false);
+  const [inventory,  setInventory]  = useState([]);
+  const [orders,     setOrders]     = useState([]);
+  const [storeInfo,  setStoreInfo]  = useState({});
+  const [loaded,     setLoaded]     = useState(false);
 
   useEffect(() => { fetchAll(); }, []);
 
   const fetchAll = async () => {
     try {
-      const [invRes, ordRes] = await Promise.all([
+      const [invRes, ordRes, storeRes] = await Promise.all([
         api.get('/inventory'),
         api.get('/orders'),
+        api.get('/auth/profile/billing'),
       ]);
       setInventory(invRes.data);
       setOrders(ordRes.data);
+      setStoreInfo(storeRes.data ?? {});
     } catch (e) { console.error(e); }
     finally     { setLoaded(true); }
   };
@@ -37,7 +40,7 @@ export default function OrdersPage() {
     <AppLayout>
       <div className="mb-8">
         <h1 className="text-xl font-bold text-zinc-100 tracking-tight">Orders &amp; Transactions</h1>
-        <p className="text-sm text-zinc-600 mt-0.5">
+        <p className="text-sm text-zinc-500 mt-0.5">
           View your order history — use the{' '}
           <a href="/pos" className="text-indigo-400 hover:underline">Point of Sale</a> page to create new orders.
         </p>
@@ -58,6 +61,7 @@ export default function OrdersPage() {
           totalRevenue={totalRevenue}
           successId={null}
           fmtDate={fmtDate}
+          storeInfo={storeInfo}
         />
       </div>
     </AppLayout>

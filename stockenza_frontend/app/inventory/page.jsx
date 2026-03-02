@@ -15,6 +15,8 @@ const EMPTY_FORM = {
   name: '', sku: '', costPrice: '', sellingPrice: '', quantity: '', category: '',
 };
 
+const DEFAULT_PAGE_SIZE = 25;
+
 export default function InventoryPage() {
   const { fmt, isMounted } = useCurrency();
 
@@ -26,6 +28,13 @@ export default function InventoryPage() {
   const [selectedCategory,  setSelectedCategory]  = useState('All');
   const [showLowStock,      setShowLowStock]      = useState(false);
   const [sortConfig,        setSortConfig]        = useState({ key: null, direction: 'asc' });
+
+  // ── Pagination State ─────────────────────────────────────────────────────────
+  const [page,     setPage]     = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+
+  // ── Bulk Selection State ─────────────────────────────────────────────────────
+  const [selectedIds, setSelectedIds] = useState(new Set());
 
   // ── Modal / CRUD State ───────────────────────────────────────────────────────
   const [modalOpen,    setModalOpen]    = useState(false);
@@ -46,6 +55,12 @@ export default function InventoryPage() {
   }, []);
 
   useEffect(() => { fetchItems(); }, [fetchItems]);
+
+  // Reset to page 1 whenever any filter changes
+  useEffect(() => { setPage(1); }, [searchQuery, selectedCategory, showLowStock, sortConfig]);
+
+  // Clear selection when page/filters change
+  useEffect(() => { setSelectedIds(new Set()); }, [page, pageSize, searchQuery, selectedCategory, showLowStock]);
 
   // ── Derived: unique categories for dropdown ──────────────────────────────────
   const categories = useMemo(() => {
@@ -94,12 +109,46 @@ export default function InventoryPage() {
     return result;
   }, [items, searchQuery, selectedCategory, showLowStock, sortConfig]);
 
+  // ── Derived: paginated slice ─────────────────────────────────────────────────
+  const paginatedItems = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filteredAndSortedItems.slice(start, start + pageSize);
+  }, [filteredAndSortedItems, page, pageSize]);
+
   // ── Sort handler ─────────────────────────────────────────────────────────────
   const handleSort = (key) => {
     setSortConfig((prev) => ({
       key,
       direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc',
     }));
+  };
+
+  // ── Bulk selection handlers ──────────────────────────────────────────────────
+  const handleToggleSelect = (id) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const handleToggleAll = (checked) => {
+    if (checked) {
+      setSelectedIds(new Set(paginatedItems.map((i) => i._id)));
+    } else {
+      setSelectedIds(new Set());
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (!window.confirm(`Delete ${selectedIds.size} products? This cannot be undone.`)) return;
+    try {
+      await Promise.all([...selectedIds].map((id) => api.delete(`/inventory/${id}`)));
+      setSelectedIds(new Set());
+      await fetchItems();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to delete some products.');
+    }
   };
 
   // ── Image helpers ────────────────────────────────────────────────────────────
@@ -190,7 +239,7 @@ export default function InventoryPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-xl font-bold text-zinc-100 tracking-tight">Inventory</h1>
-          <p className="text-sm text-zinc-600 mt-0.5">Manage your products &amp; stock levels</p>
+          <p className="text-sm text-zinc-400 mt-0.5">Manage your products &amp; stock levels</p>
         </div>
         <Button onClick={openAdd}>
           <svg className="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -214,7 +263,7 @@ export default function InventoryPage() {
 
       <InventoryTable
         items={items}
-        filtered={filteredAndSortedItems}
+        filtered={paginatedItems}
         loaded={loaded}
         isMounted={isMounted}
         fmt={fmt}
@@ -223,6 +272,16 @@ export default function InventoryPage() {
         deleteId={deleteId}
         sortConfig={sortConfig}
         onSort={handleSort}
+        // Pagination
+        page={page}
+        pageSize={pageSize}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+        // Bulk selection
+        selectedIds={selectedIds}
+        onToggleSelect={handleToggleSelect}
+        onToggleAll={handleToggleAll}
+        onBulkDelete={handleBulkDelete}
       />
 
       <InventoryModal

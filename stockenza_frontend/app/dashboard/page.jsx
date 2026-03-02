@@ -17,21 +17,48 @@ const DATE_RANGES = [
   { label: 'All Time', value: 'all-time' },
 ];
 
+/**
+ * Returns { startDate, endDate } ISO strings for the CURRENT period
+ * and { prevStart, prevEnd } for the PREVIOUS period of the same duration.
+ */
 function getDateRange(range) {
-  if (range === 'all-time') return { startDate: null, endDate: null };
-  const end = new Date(), start = new Date();
+  if (range === 'all-time') {
+    return { startDate: null, endDate: null, prevStart: null, prevEnd: null };
+  }
+
+  const now   = new Date();
+  const end   = new Date(now);
+  const start = new Date(now);
+
   if (range === 'today') {
     start.setHours(0, 0, 0, 0);
     end.setHours(23, 59, 59, 999);
   } else if (range === '7days')  { start.setDate(start.getDate() - 7); }
   else if (range === '30days') { start.setDate(start.getDate() - 30); }
   else if (range === '1year')  { start.setFullYear(start.getFullYear() - 1); }
-  return { startDate: start.toISOString(), endDate: end.toISOString() };
+
+  // Duration in ms → shift back to get previous window
+  const durationMs = end.getTime() - start.getTime();
+  const prevEnd    = new Date(start.getTime() - 1);         // 1 ms before current start
+  const prevStart  = new Date(prevEnd.getTime() - durationMs);
+
+  return {
+    startDate: start.toISOString(),
+    endDate:   end.toISOString(),
+    prevStart: prevStart.toISOString(),
+    prevEnd:   prevEnd.toISOString(),
+  };
 }
 
 function buildQs({ startDate, endDate }) {
   if (!startDate || !endDate) return '';
   return `?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`;
+}
+
+/** pct change helper; returns null if denominator is 0 */
+function pctChange(current, previous) {
+  if (!previous || previous === 0) return null;
+  return ((current - previous) / Math.abs(previous)) * 100;
 }
 
 /**
@@ -46,9 +73,6 @@ function formatHourLabel(hourKey) {
 
 /**
  * Converts backend { granularity, data } into Recharts-ready rows.
- *
- * granularity = 'hour' → label each point as "2 PM", "3 PM" etc.
- * granularity = 'day'  → 7-day range: "Mar 1"; longer: aggregate to monthly buckets
  */
 function transformChartData(granularity, rawData, dateRange) {
   if (granularity === 'hour') {
@@ -86,30 +110,39 @@ export default function DashboardPage() {
   const { fmt, isMounted } = useCurrency();
   const [dateRange, setDateRange] = useState('30days');
 
-  const [inventory, setInventory] = useState([]);
-  const [summary,   setSummary]   = useState(null);
-  const [chartData, setChartData] = useState([]);
-  const [pnlRows,   setPnlRows]   = useState([]);
-  const [loaded,    setLoaded]    = useState(false);
+  const [inventory,    setInventory]    = useState([]);
+  const [summary,      setSummary]      = useState(null);
+  const [prevSummary,  setPrevSummary]  = useState(null);
+  const [chartData,    setChartData]    = useState([]);
+  const [pnlRows,      setPnlRows]      = useState([]);
+  const [loaded,       setLoaded]       = useState(false);
 
   const fetchAll = useCallback(async () => {
     setLoaded(false);
     try {
-      const dates = getDateRange(dateRange);
-      const qs    = buildQs(dates);
+      const dates  = getDateRange(dateRange);
+      const qs     = buildQs({ startDate: dates.startDate, endDate: dates.endDate });
+      const prevQs = buildQs({ startDate: dates.prevStart, endDate: dates.prevEnd });
 
-      const [invRes, summaryRes, chartRes, pnlRes] = await Promise.all([
+      const requests = [
         api.get('/inventory'),
         api.get(`/reports/summary${qs}`),
         api.get(`/reports/chart${qs}`),
         api.get(`/reports/pnl${qs}`),
-      ]);
+      ];
+
+      // Only fetch previous period if a real date range is set
+      if (prevQs) {
+        requests.push(api.get(`/reports/summary${prevQs}`));
+      }
+
+      const [invRes, summaryRes, chartRes, pnlRes, prevSummaryRes] = await Promise.all(requests);
 
       setInventory(invRes.data);
       setSummary(summaryRes.data);
+      setPrevSummary(prevSummaryRes?.data ?? null);
       setPnlRows(pnlRes.data);
 
-      // Backend now returns { granularity: 'hour'|'day', data: [...] }
       const { granularity, data: rawChart } = chartRes.data;
       setChartData(transformChartData(granularity, rawChart, dateRange));
 
@@ -124,6 +157,18 @@ export default function DashboardPage() {
   const stockValue   = summary?.inventoryValue ?? 0;
   const orderCount   = summary?.orderCount     ?? 0;
   const totalCost    = pnlRows.reduce((s, r) => s + r.cost, 0);
+
+  const prevRevenue  = prevSummary?.totalRevenue  ?? 0;
+  const prevProfit   = prevSummary?.totalProfit   ?? 0;
+  const prevOrders   = prevSummary?.orderCount    ?? 0;
+
+  // Period-over-period % change (null if previous period has no data or all-time)
+  const revenueTrend = pctChange(totalRevenue, prevRevenue);
+  const profitTrend  = pctChange(totalProfit,  prevProfit);
+  const orderTrend   = pctChange(orderCount,   prevOrders);
+
+  // Sparkline data: last N revenue data points from the chart
+  const sparklineData = chartData.length >= 2 ? chartData.map((d) => d.revenue) : null;
 
   const lowStockItems = inventory.filter((i) => i.quantity > 0 && i.quantity <= 5);
   const outOfStock    = inventory.filter((i) => i.quantity === 0);
@@ -142,7 +187,7 @@ export default function DashboardPage() {
       <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-zinc-100 tracking-tight">Dashboard</h1>
-          <p className="text-sm text-zinc-600 mt-0.5">Business overview &amp; analytics</p>
+          <p className="text-sm text-zinc-400 mt-0.5">Business overview &amp; analytics</p>
         </div>
 
         <div className="flex items-center gap-3 flex-wrap">
@@ -181,6 +226,8 @@ export default function DashboardPage() {
           color="text-indigo-400"
           delay={0}
           loaded={loaded && isMounted}
+          trend={revenueTrend}
+          sparkline={sparklineData}
           icon={<svg className="w-4 h-4 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
         />
         <MetricCard
@@ -190,6 +237,7 @@ export default function DashboardPage() {
           color={totalProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}
           delay={80}
           loaded={loaded && isMounted}
+          trend={profitTrend}
           icon={<svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>}
         />
         <MetricCard
@@ -208,6 +256,7 @@ export default function DashboardPage() {
           color={outOfStock.length > 0 ? 'text-red-400' : lowStockItems.length > 0 ? 'text-amber-400' : 'text-emerald-400'}
           delay={240}
           loaded={loaded}
+          trend={orderTrend}
           icon={<svg className="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>}
         />
       </div>

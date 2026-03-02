@@ -9,6 +9,16 @@ const userSchema = new mongoose.Schema({
   verificationToken:    { type: String },
   resetPasswordToken:   { type: String },
   resetPasswordExpires: { type: Date },
+  billingInfo: {
+    storeName: { type: String, default: '' },
+    address:   { type: String, default: '' },
+    city:      { type: String, default: '' },
+    state:     { type: String, default: '' },
+    pincode:   { type: String, default: '' },
+    gstin:     { type: String, default: '' },
+    pan:       { type: String, default: '' },
+    phone:     { type: String, default: '' },
+  },
 }, { timestamps: true });
 
 /**

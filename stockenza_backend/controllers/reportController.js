@@ -246,7 +246,7 @@ const getSalesReport = async (req, res) => {
           as:           'product',
         },
       },
-      { $unwind: { path: '$product', preserveNullAndEmpty: false } },
+      { $unwind: { path: '$product', preserveNullAndEmptyArrays: false } },
       {
         $group: {
           _id:   '$product.category',

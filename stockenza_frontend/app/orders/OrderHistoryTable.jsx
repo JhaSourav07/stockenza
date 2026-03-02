@@ -1,23 +1,34 @@
 import { useState, Fragment } from 'react';
 import Badge from '../../components/ui/Badge';
 import { useCurrency } from '../../context/CurrencyContext';
+import { useTax } from '../../context/TaxContext';
 
 function Skeleton({ className = '' }) {
   return <div className={`rounded-lg bg-zinc-800 animate-pulse ${className}`} />;
 }
 
-// ── Expanded row — shows every line item in the order ────────────────────────
+// ── Download icon ─────────────────────────────────────────────────────────────
+function DownloadIcon() {
+  return (
+    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round"
+        d="M12 10v6m0 0l-3-3m3 3l3-3M3 17v3a1 1 0 001 1h16a1 1 0 001-1v-3" />
+    </svg>
+  );
+}
+
+// ── Expanded row — shows every line item in the order ─────────────────────────
 function ExpandedDetails({ order, fmt }) {
   const subtotal = order.items.reduce((s, it) => {
     const price = it.productId?.sellingPrice ?? 0;
     return s + price * it.qty;
   }, 0);
-  const tax   = order.totalAmount - subtotal;
+  const tax    = order.totalAmount - subtotal;
   const hasTax = tax > 0.005;
 
   return (
     <tr className="bg-zinc-950/60">
-      <td colSpan={6} className="px-5 pb-4 pt-1">
+      <td colSpan={7} className="px-5 pb-4 pt-1">
         <div className="rounded-xl border border-zinc-800 overflow-hidden">
           {/* Line items table */}
           <table className="w-full text-xs">
@@ -60,7 +71,7 @@ function ExpandedDetails({ order, fmt }) {
             </div>
             {hasTax && (
               <div className="flex gap-6">
-                <span className="text-zinc-500">Tax (10%)</span>
+                <span className="text-zinc-500">Tax</span>
                 <span className="text-zinc-300 tabular-nums w-24 text-right">{fmt(tax)}</span>
               </div>
             )}
@@ -73,15 +84,9 @@ function ExpandedDetails({ order, fmt }) {
 
         {/* Metadata row */}
         <div className="flex flex-wrap gap-4 mt-3 text-xs text-zinc-600 px-1">
-          <span>
-            Order ID: <span className="font-mono text-zinc-500">{order._id}</span>
-          </span>
-          <span>
-            Items: <span className="text-zinc-400">{order.items.reduce((s, i) => s + i.qty, 0)} units across {order.items.length} product{order.items.length !== 1 ? 's' : ''}</span>
-          </span>
-          <span>
-            Placed: <span className="text-zinc-400">{new Date(order.createdAt).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}</span>
-          </span>
+          <span>Order ID: <span className="font-mono text-zinc-500">{order._id}</span></span>
+          <span>Items: <span className="text-zinc-400">{order.items.reduce((s, i) => s + i.qty, 0)} units across {order.items.length} product{order.items.length !== 1 ? 's' : ''}</span></span>
+          <span>Placed: <span className="text-zinc-400">{new Date(order.createdAt).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}</span></span>
         </div>
       </td>
     </tr>
@@ -89,13 +94,53 @@ function ExpandedDetails({ order, fmt }) {
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
-export default function OrderHistoryTable({ orders, loaded, totalRevenue, successId, fmtDate }) {
-  const { fmt } = useCurrency();
-  const [expanded, setExpanded] = useState(null);
+export default function OrderHistoryTable({ orders, loaded, totalRevenue, successId, fmtDate, storeInfo = {} }) {
+  const { fmt }      = useCurrency();
+  const { taxRate }  = useTax();
+  const [expanded,   setExpanded]   = useState(null);
+  const [loadingPdf, setLoadingPdf] = useState(null); // tracks which order _id is generating
 
   const toggle = (id) => setExpanded((prev) => (prev === id ? null : id));
 
-  const HEADERS = ['Order ID', 'Date & Time', 'Items', 'Products', 'Total', ''];
+  // ── Per-row invoice download ────────────────────────────────────────────────
+  const handleDownload = async (e, order) => {
+    e.stopPropagation(); // don't expand/collapse the row
+    if (loadingPdf) return;
+    setLoadingPdf(order._id);
+    try {
+      const { generateInvoice } = await import('../../lib/generateInvoice');
+
+      // Compute subtotal from items (price × qty)
+      const itemsForPdf = order.items.map((it) => ({
+        name:  it.productId?.name  ?? 'Deleted product',
+        qty:   it.qty,
+        price: it.productId?.sellingPrice ?? 0,
+      }));
+      const subtotal = itemsForPdf.reduce((s, it) => s + it.price * it.qty, 0);
+      const tax      = order.totalAmount - subtotal;
+
+      await generateInvoice({
+        store:   storeInfo,
+        customer: {},          // no customer data available for past orders
+        order: {
+          _id:       order._id,
+          items:     itemsForPdf,
+          subtotal:  Math.max(subtotal, 0),
+          tax:       Math.max(tax, 0),
+          total:     order.totalAmount,
+          createdAt: order.createdAt,
+        },
+        taxRate,
+      });
+    } catch (err) {
+      console.error('[InvoiceDownload]', err);
+    } finally {
+      setLoadingPdf(null);
+    }
+  };
+
+  // 7 columns: Order ID, Date & Time, Items, Products, Total, [download btn], [chevron]
+  const HEADERS = ['Order ID', 'Date & Time', 'Items', 'Products', 'Total', '', ''];
 
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
@@ -103,7 +148,7 @@ export default function OrderHistoryTable({ orders, loaded, totalRevenue, succes
       <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800">
         <div>
           <h2 className="text-sm font-semibold text-zinc-200">Transaction History</h2>
-          <p className="text-xs text-zinc-600 mt-0.5">{orders.length} orders total — click a row to see details</p>
+          <p className="text-xs text-zinc-500 mt-0.5">{orders.length} orders total — click a row to see details</p>
         </div>
         {orders.length > 0 && <Badge variant="primary">{orders.length} total</Badge>}
       </div>
@@ -116,7 +161,7 @@ export default function OrderHistoryTable({ orders, loaded, totalRevenue, succes
                 <th
                   key={h || i}
                   className={`px-5 py-3 text-xs font-medium text-zinc-600 uppercase tracking-wider ${
-                    i === 4 ? 'text-right' : i === 5 ? 'text-center w-10' : 'text-left'
+                    i === 4 ? 'text-right' : i >= 5 ? 'text-center w-10' : 'text-left'
                   }`}
                 >
                   {h}
@@ -128,14 +173,14 @@ export default function OrderHistoryTable({ orders, loaded, totalRevenue, succes
             {!loaded ? (
               Array(5).fill(0).map((_, i) => (
                 <tr key={i}>
-                  {Array(6).fill(0).map((_, j) => (
+                  {Array(7).fill(0).map((_, j) => (
                     <td key={j} className="px-5 py-4"><Skeleton className="h-4" /></td>
                   ))}
                 </tr>
               ))
             ) : orders.length === 0 ? (
               <tr>
-                <td colSpan={6} className="py-16 text-center">
+                <td colSpan={7} className="py-16 text-center">
                   <div className="flex flex-col items-center gap-2 text-zinc-600">
                     <svg className="w-8 h-8 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round"
@@ -149,6 +194,7 @@ export default function OrderHistoryTable({ orders, loaded, totalRevenue, succes
               orders.map((order, i) => {
                 const isNew      = order._id === successId;
                 const isExpanded = expanded === order._id;
+                const isGenerating = loadingPdf === order._id;
                 const itemCount  = order.items.reduce((s, it) => s + it.qty, 0);
                 const productNames = order.items
                   .map((it) => it.productId?.name)
@@ -210,8 +256,28 @@ export default function OrderHistoryTable({ orders, loaded, totalRevenue, succes
                         </span>
                       </td>
 
+                      {/* ── Download Invoice button ── */}
+                      <td className="px-3 py-4 text-center">
+                        <button
+                          onClick={(e) => handleDownload(e, order)}
+                          disabled={!!loadingPdf}
+                          title="Download Invoice"
+                          aria-label="Download invoice PDF"
+                          className="inline-flex items-center justify-center w-7 h-7 rounded-md text-zinc-600
+                            hover:text-indigo-400 hover:bg-indigo-400/10
+                            disabled:opacity-40 disabled:cursor-not-allowed
+                            transition-all duration-150"
+                        >
+                          {isGenerating ? (
+                            <span className="w-3.5 h-3.5 rounded-full border-2 border-zinc-600 border-t-indigo-400 animate-spin" />
+                          ) : (
+                            <DownloadIcon />
+                          )}
+                        </button>
+                      </td>
+
                       {/* Expand chevron */}
-                      <td className="px-5 py-4 text-center">
+                      <td className="px-3 py-4 text-center">
                         <svg
                           className={`w-4 h-4 text-zinc-600 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
                           fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}

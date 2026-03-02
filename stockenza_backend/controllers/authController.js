@@ -16,10 +16,11 @@ const generateToken = (id) =>
 
 /* ── Safe user payload (never expose password hash) ── */
 const userPayload = (user, token) => ({
-  _id:        user._id,
-  name:       user.name,
-  email:      user.email,
-  isVerified: user.isVerified,
+  _id:         user._id,
+  name:        user.name,
+  email:       user.email,
+  isVerified:  user.isVerified,
+  billingInfo: user.billingInfo ?? {},
   token,
 });
 
@@ -431,6 +432,49 @@ const resetBusinessData = async (req, res) => {
   }
 };
 
+
+/**
+ * GET /api/auth/profile/billing  (protected)
+ * Returns the current user's billingInfo sub-document.
+ */
+const getBillingInfo = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('billingInfo');
+    return res.status(200).json(user.billingInfo ?? {});
+  } catch (err) {
+    console.error('[getBillingInfo]', err.message);
+    return res.status(500).json({ message: 'Server error.' });
+  }
+};
+
+/**
+ * PUT /api/auth/profile/billing  (protected)
+ * Saves the store's billing detail fields onto the User document.
+ */
+const updateBillingInfo = async (req, res) => {
+  try {
+    const allowed = ['storeName', 'address', 'city', 'state', 'pincode', 'gstin', 'pan', 'phone'];
+    const update  = {};
+    allowed.forEach((key) => {
+      if (req.body[key] !== undefined) update[`billingInfo.${key}`] = String(req.body[key]).trim();
+    });
+
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { $set: update },
+      { new: true, runValidators: true }
+    ).select('billingInfo');
+
+    return res.status(200).json({
+      message:     'Billing information saved.',
+      billingInfo: user.billingInfo,
+    });
+  } catch (err) {
+    console.error('[updateBillingInfo]', err.message);
+    return res.status(500).json({ message: 'Server error.' });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -440,4 +484,6 @@ module.exports = {
   resetPassword,
   updateProfile,
   resetBusinessData,
+  getBillingInfo,
+  updateBillingInfo,
 };
