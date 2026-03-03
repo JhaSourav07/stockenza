@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useGoogleLogin } from '@react-oauth/google';
 import api from '../../../lib/api';
 
 /* ── Floating orb background (different from login — orbiting geometry) ── */
@@ -96,6 +97,7 @@ export default function RegisterPage() {
   const [password, setPassword]   = useState('');
   const [error, setError]         = useState('');
   const [loading, setLoading]     = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [mounted, setMounted]     = useState(false);
   const [step, setStep]           = useState(0); // 0=idle, 1=success
 
@@ -119,6 +121,25 @@ export default function RegisterPage() {
       setLoading(false);
     }
   };
+
+  const handleGoogleSignup = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setGoogleLoading(true); setError('');
+      try {
+        const { data } = await api.post('/auth/google', { access_token: tokenResponse.access_token });
+        localStorage.setItem('stockenza_token', data.token);
+        localStorage.setItem('stockenza_user', JSON.stringify(data));
+        window.location.href = '/dashboard';
+      } catch (err) {
+        setError(err.response?.data?.message || 'Google sign-in failed. Please try again.');
+        setGoogleLoading(false);
+      }
+    },
+    onError: () => {
+      setError('Google sign-in was cancelled or failed.');
+    },
+    flow: 'implicit',
+  });
 
   const panelReady = { opacity: mounted?1:0, transform: mounted?'translateY(0)':'translateY(28px)', transition: 'opacity 0.65s cubic-bezier(0.16,1,0.3,1) 0.1s, transform 0.65s cubic-bezier(0.16,1,0.3,1) 0.1s' };
 
@@ -265,6 +286,34 @@ export default function RegisterPage() {
                 </button>
               </div>
             </form>
+
+            {/* Google Sign-Up */}
+            <div style={{ display:'flex', alignItems:'center', gap:16, margin:'18px 0 14px' }}>
+              <div style={{ flex:1, height:1, background:'linear-gradient(90deg,transparent,rgba(255,255,255,0.055))' }} />
+              <span style={{ fontFamily:'DM Mono,monospace', color:'rgba(255,255,255,0.15)', fontSize:9, letterSpacing:'0.2em' }}>OR</span>
+              <div style={{ flex:1, height:1, background:'linear-gradient(90deg,rgba(255,255,255,0.055),transparent)' }} />
+            </div>
+
+            <button
+              type="button"
+              onClick={() => handleGoogleSignup()}
+              disabled={googleLoading || loading || step === 1}
+              style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:12, width:'100%', padding:'13px 24px', borderRadius:12, border:'1px solid rgba(255,255,255,0.1)', background: googleLoading ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.05)', color:'rgba(255,255,255,0.75)', fontSize:13, fontWeight:700, cursor: (googleLoading||loading||step===1)?'not-allowed':'pointer', transition:'all 0.22s', fontFamily:'inherit', opacity: (googleLoading||loading||step===1)?0.65:1, boxSizing:'border-box' }}
+              onMouseEnter={e => { if(!googleLoading&&!loading&&step===0){ e.currentTarget.style.background='rgba(255,255,255,0.09)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.18)'; e.currentTarget.style.transform='translateY(-1px)'; }}}
+              onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.05)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.1)'; e.currentTarget.style.transform='translateY(0)'; }}
+            >
+              {googleLoading ? (
+                <span style={{ width:16, height:16, borderRadius:'50%', border:'2px solid rgba(255,255,255,0.3)', borderTopColor:'white', display:'inline-block', animation:'spin 0.7s linear infinite' }} />
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 48 48" fill="none">
+                  <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.33 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                  <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                  <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                  <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.67 14.62 48 24 48z"/>
+                </svg>
+              )}
+              {googleLoading ? 'Signing in…' : 'Continue with Google'}
+            </button>
 
             {/* Terms */}
             <p style={{ fontFamily:'DM Mono,monospace', fontSize:9, color:'rgba(255,255,255,0.15)', textAlign:'center', marginTop:14, letterSpacing:'0.06em', lineHeight:1.6 }}>

@@ -4,7 +4,8 @@ const bcrypt = require('bcryptjs');
 const userSchema = new mongoose.Schema({
   name:                 { type: String, required: true },
   email:                { type: String, required: true, unique: true },
-  password:             { type: String, required: true },
+  password:             { type: String, required: false },
+  googleId:             { type: String, sparse: true },
   isVerified:           { type: Boolean, default: false },
   verificationToken:    { type: String },
   resetPasswordToken:   { type: String },
@@ -46,7 +47,7 @@ userSchema.index(
 // Uses the async (no-callback) style required by Mongoose 6+.
 // Do NOT add a `next` parameter — Mongoose doesn't pass it to async hooks.
 userSchema.pre('save', async function () {
-  if (!this.isModified('password')) return;
+  if (!this.isModified('password') || !this.password) return;
 
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);

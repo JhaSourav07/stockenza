@@ -12,10 +12,12 @@ const {
   resetBusinessData,
   getBillingInfo,
   updateBillingInfo,
+  googleAuth,
 } = require('../controllers/authController');
 
 router.post  ('/register',              registerUser);
 router.post  ('/login',                 loginUser);
+router.post  ('/google',                googleAuth);
 router.get   ('/verify/:token',         verifyEmail);
 router.post  ('/forgot-password',       forgotPassword);
 router.post  ('/resend-verification',   resendVerification);

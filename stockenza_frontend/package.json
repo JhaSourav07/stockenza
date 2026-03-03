@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@react-oauth/google": "^0.13.4",
     "axios": "^1.13.6",
     "dom-to-image-more": "^3.7.2",
     "html2canvas": "^1.4.1",

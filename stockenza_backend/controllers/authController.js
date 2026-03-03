@@ -1,7 +1,10 @@
 const crypto    = require('crypto');
 const { Resend } = require('resend');
+const { OAuth2Client } = require('google-auth-library');
 const User      = require('../models/User');
 const jwt       = require('jsonwebtoken');
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 /* ── Resend email client ── */
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -475,6 +478,63 @@ const updateBillingInfo = async (req, res) => {
   }
 };
 
+/**
+ * POST /api/auth/google
+ * Accepts a Google OAuth access_token from the frontend (implicit flow),
+ * fetches the user profile from Google's userinfo endpoint, then finds or
+ * creates a Stockenza user and returns a JWT.  Google users are auto-verified.
+ */
+const googleAuth = async (req, res) => {
+  try {
+    const { access_token } = req.body;
+    if (!access_token) {
+      return res.status(400).json({ message: 'Google access token is required.' });
+    }
+
+    // Fetch user info from Google using the access token
+    const googleRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${access_token}` },
+    });
+
+    if (!googleRes.ok) {
+      return res.status(401).json({ message: 'Invalid Google token. Please try again.' });
+    }
+
+    const profile  = await googleRes.json();
+    const googleId = profile.sub;                           // unique Google user id
+    const email    = profile.email.toLowerCase().trim();
+    const name     = profile.name || email.split('@')[0];
+
+    // Try to find an existing user by googleId first, then by email
+    let user = await User.findOne({ googleId });
+
+    if (!user) {
+      user = await User.findOne({ email });
+      if (user) {
+        // Link Google to an existing email/password account
+        user.googleId   = googleId;
+        user.isVerified = true;
+        await user.save();
+      } else {
+        // Brand-new Google user — no password needed, auto-verified
+        user = await User.create({
+          name,
+          email,
+          googleId,
+          isVerified: true,
+        });
+      }
+    }
+
+    return res.status(200).json(userPayload(user, generateToken(user._id)));
+  } catch (err) {
+    console.error('[googleAuth]', err.message);
+    return res.status(401).json({ message: 'Google sign-in failed. Please try again.' });
+  }
+};
+
+
+
 module.exports = {
   registerUser,
   loginUser,
@@ -486,4 +546,5 @@ module.exports = {
   resetBusinessData,
   getBillingInfo,
   updateBillingInfo,
+  googleAuth,
 };
