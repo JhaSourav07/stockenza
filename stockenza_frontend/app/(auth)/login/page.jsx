@@ -116,7 +116,14 @@ export default function LoginPage() {
   const [loading, setLoading]   = useState(false);
   const [mounted, setMounted]   = useState(false);
 
-  useEffect(() => { setTimeout(() => setMounted(true), 60); }, []);
+  useEffect(() => {
+    if (typeof window !== "undefined" && localStorage.getItem('stockenza_token')) {
+      router.replace('/dashboard');
+      return;
+    }
+    setTimeout(() => setMounted(true), 60);
+  }, [router]);
+
 
   const handleSubmit = async (e) => {
     e.preventDefault(); setLoading(true); setError(''); setIsUnverified(false);

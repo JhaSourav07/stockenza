@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import api from '../../../lib/api';
 
@@ -89,6 +90,7 @@ const PERKS = [
 ];
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [name, setName]           = useState('');
   const [email, setEmail]         = useState('');
   const [password, setPassword]   = useState('');
@@ -97,7 +99,14 @@ export default function RegisterPage() {
   const [mounted, setMounted]     = useState(false);
   const [step, setStep]           = useState(0); // 0=idle, 1=success
 
-  useEffect(() => { setTimeout(() => setMounted(true), 60); }, []);
+  useEffect(() => {
+    if (typeof window !== "undefined" && localStorage.getItem('stockenza_token')) {
+      router.replace('/dashboard');
+      return;
+    }
+    setTimeout(() => setMounted(true), 60);
+  }, [router]);
+
 
   const handleSubmit = async (e) => {
     e.preventDefault(); setLoading(true); setError('');

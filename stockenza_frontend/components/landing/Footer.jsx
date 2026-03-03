@@ -1,11 +1,26 @@
 import Link from "next/link";
 
 const FOOTER_LINKS = {
-  Product: ["Dashboard", "Inventory", "Orders", "Analytics"],
-  Company: ["About", "Blog", "Careers", "Press"],
-  Support: ["Documentation", "Help Center", "Status", "Contact"],
-  Legal: ["Privacy Policy", "Terms of Service", "Cookie Policy"],
+  Product: [
+    { label: 'Dashboard', href: '/dashboard' },
+    { label: 'Inventory', href: '/inventory' },
+    { label: 'Orders', href: '/orders' },
+    { label: 'Analytics', href: '/reports' },
+  ],
+  Company: [
+    { label: 'About', href: '/#about' },
+  ],
+  Support: [
+    { label: 'Help Center', href: '/#contact' },
+    { label: 'Contact', href: '/#contact' },
+  ],
+  Legal: [
+    { label: 'Privacy Policy', href: '/privacy-policy' },
+    { label: 'Terms of Service', href: '/terms-of-service' },
+    { label: 'Cookie Policy', href: '/cookie-policy' },
+  ],
 };
+
 
 export default function Footer() {
   const year = new Date().getFullYear();
@@ -92,13 +107,13 @@ export default function Footer() {
               </p>
               <ul className="space-y-2">
                 {links.map((link) => (
-                  <li key={link}>
-                    <a
-                      href="#"
+                  <li key={link.label}>
+                    <Link
+                      href={link.href}
                       className="text-sm text-zinc-600 hover:text-zinc-300 transition-colors duration-150"
                     >
-                      {link}
-                    </a>
+                      {link.label}
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -133,7 +148,9 @@ export default function Footer() {
             </a>
             {/* GitHub */}
             <a
-              href="#"
+              href="https://github.com/JhaSourav07/stockenza"
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-zinc-700 hover:text-zinc-400 transition-colors"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">

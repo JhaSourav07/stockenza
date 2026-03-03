@@ -12,10 +12,14 @@ const NAV_LINKS = [
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", onScroll, { passive: true });
+    if (typeof window !== "undefined") {
+      setLoggedIn(!!localStorage.getItem("stockenza_token"));
+    }
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
@@ -66,18 +70,29 @@ export default function Navbar() {
 
         {/* ── CTA ── */}
         <div className="hidden md:flex items-center gap-3">
-          <Link
-            href="/login"
-            className="text-sm text-zinc-400 hover:text-zinc-100 px-4 py-2 rounded-lg hover:bg-zinc-800/60 transition-all duration-150"
-          >
-            Sign in
-          </Link>
-          <Link
-            href="/register"
-            className="text-sm font-medium px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-500 shadow-[0_0_16px_rgba(99,102,241,0.35)] hover:shadow-[0_0_24px_rgba(99,102,241,0.55)] transition-all duration-200 hover:-translate-y-px active:translate-y-0"
-          >
-            Get started free
-          </Link>
+          {loggedIn ? (
+            <Link
+              href="/dashboard"
+              className="text-sm font-medium px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-500 shadow-[0_0_16px_rgba(99,102,241,0.35)] hover:shadow-[0_0_24px_rgba(99,102,241,0.55)] transition-all duration-200 hover:-translate-y-px active:translate-y-0"
+            >
+              Go to Dashboard
+            </Link>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="text-sm text-zinc-400 hover:text-zinc-100 px-4 py-2 rounded-lg hover:bg-zinc-800/60 transition-all duration-150"
+              >
+                Sign in
+              </Link>
+              <Link
+                href="/register"
+                className="text-sm font-medium px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-500 shadow-[0_0_16px_rgba(99,102,241,0.35)] hover:shadow-[0_0_24px_rgba(99,102,241,0.55)] transition-all duration-200 hover:-translate-y-px active:translate-y-0"
+              >
+                Get started free
+              </Link>
+            </>
+          )}
         </div>
 
         {/* ── Mobile hamburger ── */}
@@ -123,18 +138,29 @@ export default function Navbar() {
             </a>
           ))}
           <div className="pt-3 border-t border-zinc-800 flex flex-col gap-2">
-            <Link
-              href="/login"
-              className="block text-center px-4 py-2.5 text-sm text-zinc-400 border border-zinc-700 rounded-lg hover:bg-zinc-800 transition-all"
-            >
-              Sign in
-            </Link>
-            <Link
-              href="/register"
-              className="block text-center px-4 py-2.5 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition-all"
-            >
-              Get started
-            </Link>
+            {loggedIn ? (
+              <Link
+                href="/dashboard"
+                className="block text-center px-4 py-2.5 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition-all"
+              >
+                Go to Dashboard
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="block text-center px-4 py-2.5 text-sm text-zinc-400 border border-zinc-700 rounded-lg hover:bg-zinc-800 transition-all"
+                >
+                  Sign in
+                </Link>
+                <Link
+                  href="/register"
+                  className="block text-center px-4 py-2.5 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition-all"
+                >
+                  Get started
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}
