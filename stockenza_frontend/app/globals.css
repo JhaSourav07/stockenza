@@ -2,113 +2,182 @@
 
 @theme {
   /* ── Core Palette ── */
-  --color-background:   #09090b;
-  --color-surface:      #18181b;
-  --color-surface-2:    #27272a;
-  --color-surface-3:    #3f3f46;
-  --color-border:       #3f3f46;
-  --color-border-dim:   #27272a;
+  --color-background: #09090b;
+  --color-surface: #18181b;
+  --color-surface-2: #27272a;
+  --color-surface-3: #3f3f46;
+  --color-border: #3f3f46;
+  --color-border-dim: #27272a;
 
   /* ── Brand ── */
-  --color-primary-50:   #eef2ff;
-  --color-primary-100:  #e0e7ff;
-  --color-primary-400:  #818cf8;
-  --color-primary-500:  #6366f1;
-  --color-primary-600:  #4f46e5;
-  --color-primary-700:  #4338ca;
-  --color-violet-400:   #a78bfa;
-  --color-violet-500:   #8b5cf6;
+  --color-primary-50: #eef2ff;
+  --color-primary-100: #e0e7ff;
+  --color-primary-400: #818cf8;
+  --color-primary-500: #6366f1;
+  --color-primary-600: #4f46e5;
+  --color-primary-700: #4338ca;
+  --color-violet-400: #a78bfa;
+  --color-violet-500: #8b5cf6;
 
   /* ── Semantic ── */
-  --color-success:      #22c55e;
-  --color-success-dim:  #16a34a;
-  --color-danger:       #ef4444;
-  --color-danger-dim:   #dc2626;
-  --color-warning:      #f59e0b;
+  --color-success: #22c55e;
+  --color-success-dim: #16a34a;
+  --color-danger: #ef4444;
+  --color-danger-dim: #dc2626;
+  --color-warning: #f59e0b;
 
   /* ── Text ── */
   --color-text-primary: #fafafa;
-  --color-text-muted:   #a1a1aa;
-  --color-text-dim:     #71717a;
+  --color-text-muted: #a1a1aa;
+  --color-text-dim: #71717a;
 
   /* ── Shadows & Glows ── */
-  --shadow-soft:        0 4px 24px -4px rgba(0, 0, 0, 0.5);
-  --shadow-glow:        0 0 24px rgba(99, 102, 241, 0.35);
-  --shadow-glow-sm:     0 0 12px rgba(99, 102, 241, 0.25);
-  --shadow-card:        0 1px 3px rgba(0,0,0,0.4), 0 8px 32px -8px rgba(0,0,0,0.5);
+  --shadow-soft: 0 4px 24px -4px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 24px rgba(99, 102, 241, 0.35);
+  --shadow-glow-sm: 0 0 12px rgba(99, 102, 241, 0.25);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4), 0 8px 32px -8px rgba(0, 0, 0, 0.5);
 
   /* ── Fonts ── */
-  --font-sans:          var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono:          var(--font-geist-mono), ui-monospace, monospace;
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
   /* ── Animations ── */
-  --animate-fade-in:         fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  --animate-slide-up:        slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  --animate-slide-in-right:  slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  --animate-glow-pulse:      glowPulse 3s ease-in-out infinite;
-  --animate-float:           float 6s ease-in-out infinite;
-  --animate-spin-slow:       spinSlow 20s linear infinite;
-  --animate-gradient:        gradientShift 8s ease infinite;
+  --animate-fade-in: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  --animate-slide-up: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  --animate-slide-in-right: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  --animate-glow-pulse: glowPulse 3s ease-in-out infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-spin-slow: spinSlow 20s linear infinite;
+  --animate-gradient: gradientShift 8s ease infinite;
 }
 
 /* ═══════════════════════════════════
    Keyframes
 ═══════════════════════════════════ */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(24px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes slideInRight {
-  from { opacity: 0; transform: translateX(24px); }
-  to   { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 @keyframes glowPulse {
-  0%, 100% { box-shadow: 0 0 20px rgba(99,102,241,0.3); }
-  50%       { box-shadow: 0 0 40px rgba(99,102,241,0.6), 0 0 80px rgba(139,92,246,0.2); }
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 0 40px rgba(99, 102, 241, 0.6), 0 0 80px rgba(139, 92, 246, 0.2);
+  }
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50%       { transform: translateY(-12px); }
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-12px);
+  }
 }
 
 @keyframes spinSlow {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes gradientShift {
-  0%   { background-position: 0% 50%; }
-  50%  { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 @keyframes shimmer {
-  0%   { background-position: -200% 0; }
-  100% { background-position:  200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 @keyframes countUp {
-  from { opacity: 0; transform: translateY(8px) scale(0.95); }
-  to   { opacity: 1; transform: translateY(0)   scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 @keyframes borderGlow {
-  0%, 100% { border-color: rgba(99,102,241,0.3); }
-  50%       { border-color: rgba(99,102,241,0.8); }
+
+  0%,
+  100% {
+    border-color: rgba(99, 102, 241, 0.3);
+  }
+
+  50% {
+    border-color: rgba(99, 102, 241, 0.8);
+  }
 }
 
 /* ═══════════════════════════════════
    Base Reset
 ═══════════════════════════════════ */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -129,10 +198,23 @@ body {
 /* ═══════════════════════════════════
    Scrollbar — custom dark
 ═══════════════════════════════════ */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: var(--color-surface); }
-::-webkit-scrollbar-thumb { background: var(--color-surface-3); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--color-primary-500); }
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-surface);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-surface-3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary-500);
+}
 
 /* ═══════════════════════════════════
    Selection
@@ -200,10 +282,12 @@ body {
   box-shadow: 0 0 20px rgba(99, 102, 241, 0.35);
   transition: box-shadow 0.2s ease, transform 0.15s ease;
 }
+
 .btn-glow:hover {
   box-shadow: 0 0 32px rgba(99, 102, 241, 0.55), 0 0 64px rgba(139, 92, 246, 0.2);
   transform: translateY(-1px);
 }
+
 .btn-glow:active {
   transform: translateY(0px) scale(0.98);
 }
@@ -212,6 +296,7 @@ body {
 .gradient-border {
   position: relative;
 }
+
 .gradient-border::before {
   content: '';
   position: absolute;
@@ -225,7 +310,7 @@ body {
 
 /* Dot grid background */
 .dot-grid {
-  background-image: radial-gradient(circle, rgba(99,102,241,0.15) 1px, transparent 1px);
+  background-image: radial-gradient(circle, rgba(99, 102, 241, 0.15) 1px, transparent 1px);
   background-size: 28px 28px;
 }
 
@@ -235,6 +320,20 @@ body {
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
+
+/* Topbar background — theme-aware translucent glass */
+.topbar-bg {
+  background: rgba(9, 9, 11, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+[data-theme="light"] .topbar-bg {
+  background: rgba(248, 247, 244, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
 
 /* Stat counter animation */
 .count-up {
@@ -286,6 +385,7 @@ body {
 .table-row-hover {
   transition: background-color 0.15s ease;
 }
+
 .table-row-hover:hover {
   background-color: rgba(99, 102, 241, 0.04);
 }
@@ -301,6 +401,7 @@ body {
 .card-hover {
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
+
 .card-hover:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 40px -8px rgba(99, 102, 241, 0.2);
@@ -308,7 +409,9 @@ body {
 }
 
 /* Input focus glow */
-input:focus, select:focus, textarea:focus {
+input:focus,
+select:focus,
+textarea:focus {
   outline: none;
   box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
 }
@@ -316,10 +419,201 @@ input:focus, select:focus, textarea:focus {
 /* Recharts dark overrides */
 .recharts-cartesian-grid-horizontal line,
 .recharts-cartesian-grid-vertical line {
-  stroke: rgba(255,255,255,0.05) !important;
+  stroke: rgba(255, 255, 255, 0.05) !important;
 }
+
 .recharts-tooltip-wrapper .recharts-default-tooltip {
   background: #18181b !important;
   border: 1px solid #3f3f46 !important;
   border-radius: 10px !important;
+}
+
+/* ═══════════════════════════════════
+   LIGHT THEME — [data-theme="light"]
+   Premium warm-cream palette:
+   Base: #f8f7f4 (warm cream)
+   Surface: #ffffff (card white)
+   Text: #1a1a2e (deep navy)
+   Brand: indigo-600 (#4f46e5)
+═══════════════════════════════════ */
+
+[data-theme="light"] {
+
+  /* ── Tailwind zinc overrides ──
+     These map Tailwind's zinc-* classes to light values
+     by overriding the CSS vars Tailwind Oxide uses.
+  ── */
+  --color-zinc-950: #f8f7f4;
+  /* page background → warm cream     */
+  --color-zinc-900: #f0eeea;
+  /* sidebar / panels                  */
+  --color-zinc-800: #e5e3de;
+  /* borders, dividers                 */
+  --color-zinc-700: #d4d2cc;
+  /* subtle borders                    */
+  --color-zinc-600: #9b9790;
+  /* muted text                        */
+  --color-zinc-500: #6b6864;
+  /* secondary text                    */
+  --color-zinc-400: #4a4845;
+  /* tertiary text                     */
+  --color-zinc-300: #2e2c2a;
+  /* strong body text                  */
+  --color-zinc-200: #1e1c1a;
+  /* prominent text                    */
+  --color-zinc-100: #1a1816;
+  /* primary headings                  */
+  --color-zinc-50: #0f0e0d;
+  /* max contrast                      */
+
+  /* ── CSS custom property overrides ── */
+  --color-background: #f8f7f4;
+  --color-surface: #ffffff;
+  --color-surface-2: #f0eeea;
+  --color-surface-3: #e5e3de;
+  --color-border: #dcd9d3;
+  --color-border-dim: #eceae6;
+
+  --color-text-primary: #1a1816;
+  --color-text-muted: #6b6864;
+  --color-text-dim: #9b9790;
+
+  --shadow-soft: 0 4px 24px -4px rgba(0, 0, 0, 0.08);
+  --shadow-glow: 0 0 24px rgba(79, 70, 229, 0.18);
+  --shadow-glow-sm: 0 0 12px rgba(79, 70, 229, 0.12);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 8px 32px -8px rgba(0, 0, 0, 0.1);
+
+  color-scheme: light;
+}
+
+/* ── Body in light mode ── */
+[data-theme="light"] body {
+  background-color: #f8f7f4;
+  color: #1a1816;
+}
+
+/* ── Scrollbar — light variant ── */
+[data-theme="light"] ::-webkit-scrollbar-track {
+  background: #f0eeea;
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: #d4d2cc;
+  border-radius: 3px;
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+  background: #4f46e5;
+}
+
+/* ── Selection ── */
+[data-theme="light"] ::selection {
+  background: rgba(79, 70, 229, 0.18);
+  color: #1a1816;
+}
+
+/* ── Glass card ── */
+[data-theme="light"] .glass {
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+[data-theme="light"] .glass-strong {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.09);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* ── Shimmer (light) ── */
+[data-theme="light"] .shimmer {
+  background: linear-gradient(90deg, #f0eeea 25%, #e5e3de 50%, #f0eeea 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ── Dot grid ── */
+[data-theme="light"] .dot-grid {
+  background-image: radial-gradient(circle, rgba(79, 70, 229, 0.1) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* ── Table row hover ── */
+[data-theme="light"] .table-row-hover:hover {
+  background-color: rgba(79, 70, 229, 0.04);
+}
+
+/* ── Sidebar active item ── */
+[data-theme="light"] .nav-active {
+  background: rgba(79, 70, 229, 0.09);
+  border-left: 2px solid #4f46e5;
+  color: #4f46e5;
+}
+
+/* ── Card hover ── */
+[data-theme="light"] .card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 40px -8px rgba(79, 70, 229, 0.15);
+  border-color: rgba(79, 70, 229, 0.2);
+}
+
+/* ── Input focus glow ── */
+[data-theme="light"] input:focus,
+[data-theme="light"] select:focus,
+[data-theme="light"] textarea:focus {
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.22);
+}
+
+/* ── Btn glow ── */
+[data-theme="light"] .btn-glow {
+  box-shadow: 0 0 16px rgba(79, 70, 229, 0.25);
+}
+
+[data-theme="light"] .btn-glow:hover {
+  box-shadow: 0 0 28px rgba(79, 70, 229, 0.42), 0 0 56px rgba(109, 40, 217, 0.12);
+}
+
+/* ── Recharts (light) ── */
+[data-theme="light"] .recharts-cartesian-grid-horizontal line,
+[data-theme="light"] .recharts-cartesian-grid-vertical line {
+  stroke: rgba(0, 0, 0, 0.06) !important;
+}
+
+[data-theme="light"] .recharts-tooltip-wrapper .recharts-default-tooltip {
+  background: #ffffff !important;
+  border: 1px solid #dcd9d3 !important;
+  border-radius: 10px !important;
+  color: #1a1816 !important;
+}
+
+[data-theme="light"] .recharts-text {
+  fill: #6b6864 !important;
+}
+
+[data-theme="light"] .recharts-legend-item-text {
+  color: #6b6864 !important;
+}
+
+/* ── glowPulse (subtler in light) ── */
+[data-theme="light"] .animate-\[glowPulse\] {
+  animation: glowPulseLight 3s ease-in-out infinite;
+}
+
+@keyframes glowPulseLight {
+
+  0%,
+  100% {
+    box-shadow: 0 0 12px rgba(79, 102, 241, 0.18);
+  }
+
+  50% {
+    box-shadow: 0 0 26px rgba(79, 70, 229, 0.32);
+  }
+}
+
+/* ── Border glow ── */
+[data-theme="light"] .gradient-border::before {
+  opacity: 0.6;
 }

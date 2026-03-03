@@ -35,15 +35,15 @@ function AppLayoutInner({ children }) {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-8 h-8 rounded-full border-2 border-zinc-700 border-t-indigo-500 animate-spin" />
-          <p className="text-xs text-zinc-600">Authenticating…</p>
+          <div className="w-8 h-8 rounded-full border-2 border-zinc-800 border-t-indigo-500 animate-spin" />
+          <p className="text-xs text-zinc-500">Authenticating…</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950">
+    <div className="min-h-screen bg-zinc-950 transition-colors duration-300">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <Topbar onMenuClick={() => setSidebarOpen((prev) => !prev)} />
 

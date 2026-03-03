@@ -9,6 +9,7 @@ import api from '../../lib/api';
 import ProfileSidebar from '../../app/profile/ProfileSidebar';
 import AccountInformation from '../../app/profile/AccountInformation';
 import CurrencyPreference from '../../app/profile/CurrencyPreference';
+import ThemePreference from '../../app/profile/ThemePreference';
 import ActiveSession from '../../app/profile/ActiveSession';
 import DangerZone from '../../app/profile/DangerZone';
 import PlaceholderSection from '../../app/profile/PlaceholderSection';
@@ -137,6 +138,7 @@ export default function ProfilePage() {
                 onSave={handleCurrencySave}
                 saved={currencySaved}
               />
+              <ThemePreference />
               <ActiveSession user={user} />
               <DangerZone onLogout={handleLogout} onResetData={handleResetData} />
             </>

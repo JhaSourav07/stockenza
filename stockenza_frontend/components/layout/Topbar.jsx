@@ -40,7 +40,7 @@ export default function Topbar({ onMenuClick }) {
       className={[
         'h-16 fixed top-0 right-0 z-30',
         'flex items-center justify-between px-4 sm:px-6 lg:px-8',
-        'bg-zinc-950/80 backdrop-blur-md border-b border-zinc-800/80',
+        'topbar-bg border-b border-zinc-800/80',
         // On mobile: full width. On desktop: offset by sidebar.
         'left-0 lg:left-64',
       ].join(' ')}
