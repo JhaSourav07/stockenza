@@ -4,6 +4,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 import { SidebarProvider, useSidebar } from '../../context/SidebarContext';
+import FeedbackWidget from '../dashboard/FeedbackWidget';
 
 // Inner layout that reads the SidebarContext
 function AppLayoutInner({ children }) {
@@ -46,12 +47,6 @@ function AppLayoutInner({ children }) {
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <Topbar onMenuClick={() => setSidebarOpen((prev) => !prev)} />
 
-      {/*
-        ── Main content ──
-        On desktop (lg+): margin-left transitions between 16rem (expanded)
-        and 4rem (collapsed) with a smooth 300ms animation.
-        On mobile: no left margin — sidebar is a floating overlay drawer.
-      */}
       <main
         className="pt-16 min-h-screen"
         style={{ animation: 'pageIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}
@@ -65,6 +60,9 @@ function AppLayoutInner({ children }) {
           </div>
         </div>
       </main>
+
+      {/* Floating feedback button — available on all dashboard pages */}
+      <FeedbackWidget />
 
       <style jsx global>{`
         @keyframes pageIn {

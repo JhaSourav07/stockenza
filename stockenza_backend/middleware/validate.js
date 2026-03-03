@@ -140,6 +140,7 @@ const validateOrder = buildValidator([
 ]);
 
 module.exports = {
+  buildValidator,
   validateRegister,
   validateLogin,
   validateInventoryItem,

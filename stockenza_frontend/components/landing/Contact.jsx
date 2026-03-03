@@ -1,21 +1,36 @@
 'use client';
 import { useState } from 'react';
+import axios from 'axios';
+
+const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 export default function Contact() {
   const [form, setForm]       = useState({ name: '', email: '', message: '' });
   const [status, setStatus]   = useState('idle'); // idle | sending | sent | error
   const [focused, setFocused] = useState('');
+  const [errMsg, setErrMsg]   = useState('');
 
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setStatus('sending');
-    // Simulate API call
-    await new Promise((r) => setTimeout(r, 1400));
-    setStatus('sent');
-    setForm({ name: '', email: '', message: '' });
-    setTimeout(() => setStatus('idle'), 4000);
+    setErrMsg('');
+    try {
+      await axios.post(`${API}/messages/contact`, {
+        name:    form.name,
+        email:   form.email,
+        message: form.message,
+      });
+      setStatus('sent');
+      setForm({ name: '', email: '', message: '' });
+      setTimeout(() => setStatus('idle'), 4000);
+    } catch (err) {
+      const msg = err?.response?.data?.message || 'Something went wrong. Please try again.';
+      setErrMsg(msg);
+      setStatus('error');
+      setTimeout(() => setStatus('idle'), 4000);
+    }
   };
 
   const inputBase = [
@@ -111,6 +126,11 @@ export default function Contact() {
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
+                {status === 'error' && errMsg && (
+                  <div className="px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+                    {errMsg}
+                  </div>
+                )}
                 <div>
                   <label className="text-xs font-medium text-zinc-500 uppercase tracking-wider block mb-1.5">Full name</label>
                   <input
