@@ -1,8 +1,21 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 
+
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+
+function useInView(threshold = 0.1) {
+  const ref = useRef(null);
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setInView(true); obs.disconnect(); } }, { threshold });
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, [threshold]);
+  return [ref, inView];
+}
+
 
 const SUBJECTS = ['General Inquiry', 'Pricing', 'Feature Request', 'Bug Report', 'Partnership'];
 const MAX_CHARS = 500;
@@ -40,6 +53,7 @@ const TESTIMONIALS = [
 ];
 
 export default function Contact() {
+  const [sectionRef, inView] = useInView(0.1);
   const [form, setForm]       = useState({ name: '', email: '', subject: SUBJECTS[0], message: '' });
   const [status, setStatus]   = useState('idle'); // idle | sending | sent | error
   const [focused, setFocused] = useState('');
@@ -81,7 +95,7 @@ export default function Contact() {
   const charCount = form.message.length;
 
   return (
-    <section id="contact" className="py-32 relative overflow-hidden">
+    <section ref={sectionRef} id="contact" className="py-32 relative overflow-hidden">
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-zinc-800 to-transparent" />
 
       {/* Atmosphere gradient */}
@@ -106,20 +120,32 @@ export default function Contact() {
 
           {/* ── Left column ── */}
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-400 text-xs font-medium mb-5">
+            <div
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-400 text-xs font-medium mb-5"
+              style={{ opacity: inView ? 1 : 0, animation: inView ? 'fadeUp 0.5s both' : 'none' }}
+            >
               Contact us
             </div>
-            <h2 className="text-4xl sm:text-5xl font-bold text-zinc-100 tracking-tight mb-5 leading-tight">
+            <h2
+              className="text-4xl sm:text-5xl font-bold text-zinc-100 tracking-tight mb-5 leading-tight"
+              style={{ opacity: inView ? 1 : 0, animation: inView ? 'fadeUp 0.55s 80ms both' : 'none' }}
+            >
               Have questions?
               <br />
               <span className="gradient-text">We&apos;d love to talk.</span>
             </h2>
-            <p className="text-zinc-500 text-lg leading-relaxed mb-10">
+            <p
+              className="text-zinc-500 text-lg leading-relaxed mb-10"
+              style={{ opacity: inView ? 1 : 0, animation: inView ? 'fadeUp 0.55s 160ms both' : 'none' }}
+            >
               Whether you&apos;re curious about features, pricing, or want a personal walkthrough — drop us a message and we&apos;ll get back to you within 24 hours.
             </p>
 
             {/* Info tiles */}
-            <div className="space-y-3 mb-8">
+            <div
+              className="space-y-3 mb-8"
+              style={{ opacity: inView ? 1 : 0, animation: inView ? 'fadeUp 0.55s 240ms both' : 'none' }}
+            >
               {[
                 {
                   icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>,
@@ -154,7 +180,10 @@ export default function Contact() {
             </div>
 
             {/* Social proof testimonials */}
-            <div className="bg-zinc-900/40 border border-zinc-800/60 rounded-2xl p-5 space-y-4">
+            <div
+              className="bg-zinc-900/40 border border-zinc-800/60 rounded-2xl p-5 space-y-4"
+              style={{ opacity: inView ? 1 : 0, animation: inView ? 'fadeUp 0.55s 340ms both' : 'none' }}
+            >
               <p className="text-xs text-zinc-600 uppercase tracking-wider font-medium">What our users say</p>
               {TESTIMONIALS.map(({ initials, from, to, name, stars, quote }) => (
                 <div key={name} className="flex items-start gap-3">
@@ -177,7 +206,10 @@ export default function Contact() {
           </div>
 
           {/* ── Right: form card ── */}
-          <div className="relative rounded-2xl overflow-hidden shadow-[0_24px_64px_rgba(0,0,0,0.5)]">
+          <div
+            className="relative rounded-2xl overflow-hidden shadow-[0_24px_64px_rgba(0,0,0,0.5)]"
+            style={{ opacity: inView ? 1 : 0, animation: inView ? 'fadeUp 0.6s 100ms both' : 'none' }}
+          >
             {/* Aurora blob behind card */}
             <div
               className="absolute -inset-10 pointer-events-none"

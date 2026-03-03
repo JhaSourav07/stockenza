@@ -73,7 +73,8 @@ const STEPS = [
 ];
 
 export default function HowItWorks() {
-  const [ref, inView] = useInView(0.1);
+  const [ref,    inView]    = useInView(0.1); // steps grid
+  const [hdrRef, hdrInView] = useInView(0.1); // header + CTA
 
   return (
     <section id="how-it-works" className="py-32 relative overflow-hidden">
@@ -91,15 +92,24 @@ export default function HowItWorks() {
 
       <div className="max-w-6xl mx-auto px-6">
         {/* Header */}
-        <div className="text-center mb-20">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-400 text-xs font-medium mb-4">
+        <div ref={hdrRef} className="text-center mb-20">
+          <div
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-400 text-xs font-medium mb-4"
+            style={{ opacity: hdrInView ? 1 : 0, animation: hdrInView ? 'fadeUp 0.5s both' : 'none' }}
+          >
             How it works
           </div>
-          <h2 className="text-4xl sm:text-5xl font-bold text-zinc-100 tracking-tight mb-5">
+          <h2
+            className="text-4xl sm:text-5xl font-bold text-zinc-100 tracking-tight mb-5"
+            style={{ opacity: hdrInView ? 1 : 0, animation: hdrInView ? 'fadeUp 0.55s 80ms both' : 'none' }}
+          >
             Up and running in
             <span className="gradient-text"> minutes.</span>
           </h2>
-          <p className="text-lg text-zinc-500 max-w-xl mx-auto">
+          <p
+            className="text-lg text-zinc-500 max-w-xl mx-auto"
+            style={{ opacity: hdrInView ? 1 : 0, animation: hdrInView ? 'fadeUp 0.55s 160ms both' : 'none' }}
+          >
             No onboarding calls. No manual. Just four simple steps to full business visibility.
           </p>
         </div>
@@ -189,7 +199,10 @@ export default function HowItWorks() {
         </div>
 
         {/* CTA band */}
-        <div className="mt-14 bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div
+          className="mt-14 bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4"
+          style={{ opacity: hdrInView ? 1 : 0, animation: hdrInView ? 'fadeUp 0.55s 200ms both' : 'none' }}
+        >
           <div>
             <p className="text-zinc-200 font-semibold text-base">Ready to see it live?</p>
             <p className="text-zinc-500 text-sm mt-0.5">Set up your account in under 3 minutes — no card needed.</p>
@@ -207,6 +220,10 @@ export default function HowItWorks() {
       </div>
 
       <style jsx global>{`
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(18px); }
+          to   { opacity: 1; transform: translateY(0);    }
+        }
         @keyframes beamTravel {
           0%   { left: 0%;   opacity: 0; }
           10%  { opacity: 1;            }

@@ -162,7 +162,7 @@ const FEATURES = [
    (must be module-level so React doesn't
     remount it on every parent render)
 ───────────────────────────────────────────── */
-function HeadlineWords({ text, className = "", baseDelay = 0 }) {
+function HeadlineWords({ text, className = "", baseDelay = 0, inView = false }) {
   return (
     <>
       {text.split(" ").map((word, i) => (
@@ -170,7 +170,10 @@ function HeadlineWords({ text, className = "", baseDelay = 0 }) {
           key={i}
           className={`inline-block ${className}`}
           style={{
-            animation: `fadeUp 0.55s cubic-bezier(0.16,1,0.3,1) ${baseDelay + i * 70}ms both`,
+            opacity: inView ? undefined : 0,
+            animation: inView
+              ? `fadeUp 0.55s cubic-bezier(0.16,1,0.3,1) ${baseDelay + i * 70}ms both`
+              : 'none',
           }}
         >
           {word}&nbsp;
@@ -184,7 +187,8 @@ function HeadlineWords({ text, className = "", baseDelay = 0 }) {
    Main About Component
 ───────────────────────────────────────────── */
 export default function About() {
-  const [ref, inView] = useInView(0.2);
+  const [ref,    inView]    = useInView(0.1); // stats row
+  const [topRef, topInView] = useInView(0.1); // header + feature cards + terminal
 
   /* Live metrics state */
   const [metrics, setMetrics] = useState([
@@ -286,11 +290,15 @@ export default function About() {
       <div className="max-w-6xl mx-auto px-6 relative z-10">
 
         {/* ── Header ── */}
-        <div className="text-center mb-16">
+        <div ref={topRef} className="text-center mb-16">
           {/* Shimmer badge */}
           <div
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-zinc-700/60 text-zinc-400 text-xs font-medium mb-5 relative overflow-hidden shimmer-badge"
-            style={{ background: "rgba(24,24,27,0.8)" }}
+            style={{
+              background: "rgba(24,24,27,0.8)",
+              opacity: topInView ? 1 : 0,
+              animation: topInView ? 'fadeUp 0.5s both' : 'none',
+            }}
           >
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" style={{ animation: "terminalBlink 1s step-end infinite" }} />
             Platform Overview
@@ -299,10 +307,10 @@ export default function About() {
           {/* Staggered headline */}
           <h2 className="text-4xl sm:text-5xl font-bold tracking-tight mb-5">
             <span className="block">
-              <HeadlineWords text="Everything your business needs," className="text-zinc-100" baseDelay={50} />
+              <HeadlineWords text="Everything your business needs," className="text-zinc-100" baseDelay={50} inView={topInView} />
             </span>
             <span className="block mt-1">
-              <HeadlineWords text="nothing it" className="text-zinc-100" baseDelay={300} />
+              <HeadlineWords text="nothing it" className="text-zinc-100" baseDelay={300} inView={topInView} />
               <span
                 className="inline-block"
                 style={{
@@ -311,8 +319,10 @@ export default function About() {
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
                   backgroundClip: "text",
-                  animation: "gradientShift 4s linear infinite",
-                  animationDelay: "0.5s",
+                  animation: topInView
+                    ? "fadeUp 0.55s 450ms both, gradientShift 4s 450ms linear infinite"
+                    : 'none',
+                  opacity: topInView ? undefined : 0,
                 }}
               >
                 &nbsp;doesn&apos;t.
@@ -322,7 +332,7 @@ export default function About() {
 
           <p
             className="text-lg text-zinc-500 max-w-2xl mx-auto leading-relaxed"
-            style={{ animation: "fadeUp 0.6s 0.6s both" }}
+            style={{ animation: topInView ? 'fadeUp 0.6s 0.6s both' : 'none', opacity: topInView ? undefined : 0 }}
           >
             Stockenza is a unified business intelligence platform for product-based
             businesses. It connects your inventory, sales, and finances into one
@@ -344,7 +354,8 @@ export default function About() {
                   background: "rgba(24,24,27,0.4)",
                   border: "1px solid rgba(255,255,255,0.06)",
                   borderLeft: `3px solid ${item.accent}55`,
-                  animation: `fadeUp 0.5s ${i * 130}ms both`,
+                  animation: topInView ? `fadeUp 0.5s ${i * 130}ms both` : 'none',
+                  opacity: topInView ? undefined : 0,
                   "--accent": item.accent,
                   "--glow": item.glowColor,
                 }}
@@ -383,7 +394,8 @@ export default function About() {
               background: "#09090b",
               border: "1px solid rgba(63,63,70,0.8)",
               boxShadow: "inset 0 0 40px rgba(0,0,0,0.6), 0 24px 60px rgba(0,0,0,0.5)",
-              animation: "fadeUp 0.6s 0.35s both",
+              animation: topInView ? 'fadeUp 0.6s 0.35s both' : 'none',
+              opacity: topInView ? undefined : 0,
             }}
           >
             {/* CRT scanline overlay */}

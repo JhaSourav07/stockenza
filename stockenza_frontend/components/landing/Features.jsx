@@ -276,7 +276,8 @@ const FEATURES = [
 ];
 
 export default function Features() {
-  const [ref, inView] = useInView(0.1);
+  const [ref,    inView]    = useInView(0.1);
+  const [hdrRef, hdrInView] = useInView(0.1);
   const [activeTab, setActiveTab] = useState('All');
   const [tabUnderX, setTabUnderX] = useState(0);
   const tabRefs = useRef([]);
@@ -304,17 +305,26 @@ export default function Features() {
 
       <div className="max-w-6xl mx-auto px-6">
         {/* Header */}
-        <div className="text-center mb-10">
-          <h2 className="text-4xl sm:text-5xl font-bold text-zinc-100 tracking-tight mb-5">
+        <div ref={hdrRef} className="text-center mb-10">
+          <h2
+            className="text-4xl sm:text-5xl font-bold text-zinc-100 tracking-tight mb-5"
+            style={{ opacity: hdrInView ? 1 : 0, animation: hdrInView ? 'fadeUp 0.55s both' : 'none' }}
+          >
             Built for how businesses
             <span className="gradient-text"> actually work.</span>
           </h2>
-          <p className="text-lg text-zinc-500 max-w-xl mx-auto mb-8">
+          <p
+            className="text-lg text-zinc-500 max-w-xl mx-auto mb-8"
+            style={{ opacity: hdrInView ? 1 : 0, animation: hdrInView ? 'fadeUp 0.55s 100ms both' : 'none' }}
+          >
             Four core modules. Infinite visibility. Zero learning curve.
           </p>
 
           {/* Tab switcher */}
-          <div className="relative inline-flex items-center gap-1 p-1 rounded-xl bg-zinc-900 border border-zinc-800">
+          <div
+            className="relative inline-flex items-center gap-1 p-1 rounded-xl bg-zinc-900 border border-zinc-800"
+            style={{ opacity: hdrInView ? 1 : 0, animation: hdrInView ? 'fadeUp 0.55s 180ms both' : 'none' }}
+          >
             {TABS.map((tab, idx) => (
               <button
                 key={tab}
